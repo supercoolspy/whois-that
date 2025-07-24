@@ -125,14 +125,9 @@ Custom server lists should be JSON files in the following format:
 
 ## Contributing
 
-Contributions are welcome! Here's how you can help:
-
-1. **Report bugs** by opening issues
-2. **Suggest features** through issues
-3. **Submit pull requests** to fix issues or add features
+Contributions are welcome!
 
 ## Acknowledgments
 
 - [Tokio](https://tokio.rs/) for the asynchronous runtime
-- [IDNA](https://github.com/servo/rust-idna) for international domain name support
 - [DashMap](https://github.com/xacrimon/dashmap) for concurrent maps
