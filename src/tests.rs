@@ -27,13 +27,10 @@ async fn test_whois_builder() {
 async fn test_simple_domain() {
     let whois = basic_whois_client();
 
-    println!(
-        "{}",
-        whois
-            .whois_lookup("google.com")
-            .await
-            .expect("Should be able to get whois data for google")
-    );
+    whois
+        .whois_lookup("google.com")
+        .await
+        .expect("Should be able to get whois data for google");
 }
 
 #[tokio::test]
@@ -56,5 +53,42 @@ async fn test_simple_international() {
     whois
         .whois_lookup("registro.br")
         .await
-        .expect("Shouldn't be able to get whois data for google.dev");
+        .expect("Shouldn't be able to get whois data for registro.br");
 }
+
+#[tokio::test]
+#[cfg(feature = "serde")]
+#[cfg(feature = "decode-global")]
+async fn test_simple_emoji() {
+    let whois = basic_whois_client();
+
+    whois
+        .whois_lookup("📻.fm")
+        .await
+        .expect("Shouldn't be able to get whois data for 📻.fm");
+}
+
+#[tokio::test]
+#[cfg(feature = "serde")]
+#[cfg(feature = "decode-global")]
+async fn test_simple_unicode() {
+    let whois = basic_whois_client();
+
+    whois
+        .whois_lookup("xn--1lq68wkwbj6u.jp")
+        .await
+        .expect("Shouldn't be able to get whois data for xn--1lq68wkwbj6u.jp");
+}
+
+#[tokio::test]
+#[cfg(feature = "serde")]
+#[cfg(feature = "decode-global")]
+async fn test_simple_unicode_unparsed() {
+    let whois = basic_whois_client();
+
+    whois
+        .whois_lookup("öbb.at")
+        .await
+        .expect("Shouldn't be able to get whois data for xn--1lq68wkwbj6u.jp");
+}
+

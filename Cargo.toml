@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 license = "MIT"
 authors = ["supercoolspy"]
+repository = "https://github.com/supercoolspy/whois-that"
+readme = "README.md"
 description = "A feature full whois client library with support for non-UTF8 responses"
 
 [features]
@@ -23,4 +25,3 @@ tokio = { version = "1", features = ["net", "io-util"] }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
-url = "2.5.4"
