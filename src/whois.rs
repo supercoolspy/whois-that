@@ -16,8 +16,12 @@ pub struct Whois {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+/// A whois server info entry
 pub enum WhoisServerEntry {
+    /// A simple entry with only the whois server host as a parameter
     Simple(Arc<str>),
+    /// A detailed entry with the whois server host
+    /// along with the full query and whether to use punycode
     Detailed {
         host: Arc<str>,
         query: Arc<str>,
@@ -100,7 +104,9 @@ impl Whois {
     }
 
     #[cfg(feature = "decode-global")]
-    fn decode_global(data: Vec<u8>) -> Result<String, Vec<u8>> {
+    /// Decodes a non-UTF8 string by attempting to parsing it as Windows_1252,
+    /// but returning the raw data if it has errors when parsing with that encoding
+    fn decode(data: Vec<u8>) -> Result<String, Vec<u8>> {
         let (decoded, _, had_errors) = encoding_rs::WINDOWS_1252.decode(&data);
 
         if had_errors {
@@ -111,10 +117,12 @@ impl Whois {
     }
 
     #[cfg(not(feature = "decode-global"))]
-    fn decode_global(data: Vec<u8>) -> Result<String, Vec<u8>> {
+    /// Decodes a non-UTF8 string into a lossy UTF8 one
+    fn decode(data: Vec<u8>) -> Result<String, Vec<u8>> {
         Ok(String::from_utf8_lossy(&data).into_owned())
     }
 
+    /// Lookup a domain using already-found whois info and domain root
     pub async fn lookup(&self, domain_lookup_info: DomainLookupInfo) -> Result<String, WhoisError> {
         let mut stream = match domain_lookup_info.server_info {
             WhoisServerEntry::Simple(ref host) => TcpStream::connect(format!("{}:43", host)),
@@ -149,7 +157,7 @@ impl Whois {
         if let Ok(whois_data) = std::str::from_utf8(&data) {
             Ok(whois_data.to_string())
         } else {
-            Self::decode_global(data).map_err(|e| WhoisError::WhoisData(e))
+            Self::decode(data).map_err(|e| WhoisError::WhoisData(e))
         }
     }
 
