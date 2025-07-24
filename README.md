@@ -112,14 +112,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### Server List Format
 
-Custom server lists should be JSON files in the following format:
+Custom server lists should be JSON files in the following formats:
 
-```json
+```json5
 {
-  "com": "whois.verisign-grs.com",
-  "net": "whois.verisign-grs.com",
-  "org": "whois.pir.org",
-  "io": "whois.nic.io"
+  // Standard format
+  "io": "whois.nic.io",
+  // Detailed format
+  "net": {
+    "host": "whois.verisign-grs.com",
+    "query": "DOMAIN $addr\r\n",
+    "punycode": true
+  },
 }
 ```
 
