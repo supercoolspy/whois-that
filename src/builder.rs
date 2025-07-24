@@ -20,6 +20,7 @@ pub enum WhoisBuilderError {
 }
 
 /// The type of server list data that the builder will use
+#[derive(Debug, Clone)]
 pub enum ServerListType {
     #[cfg(feature = "serde")]
     Path(PathBuf),
@@ -28,12 +29,13 @@ pub enum ServerListType {
     Parsed(DashMap<String, Option<Arc<str>>>),
 }
 
+#[derive(Debug, Clone)]
 pub struct WhoisBuilder {
     server_list: ServerListType,
 }
 
 #[cfg(feature = "serde")]
-impl<'a> Default for WhoisBuilder {
+impl Default for WhoisBuilder {
     fn default() -> Self {
         Self {
             server_list: ServerListType::Data(include_str!("assets/servers.json").to_string()),

@@ -7,6 +7,7 @@ use tokio::net::TcpStream;
 
 extern crate dashmap;
 
+#[derive(Debug, Clone)]
 pub struct Whois {
     /// The list of whois servers to lookup.
     /// Uses `Arc<str>` since it is more efficient when looking up
@@ -14,6 +15,7 @@ pub struct Whois {
     pub(crate) whois_servers: DashMap<String, Option<Arc<str>>>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DomainLookupInfo {
     /// The whois server for a domain
     server: Arc<str>,
