@@ -14,7 +14,6 @@
 - **Configurable Server Lists** - Use default or custom WHOIS server configurations
 - **Efficient Domain Suffix Lookup** - Fast TLD and domain lookups
 - **Minimal Dependencies** - Feature flags let you include only what you need
-- **Easy Error Handling** - Comprehensive error types with thiserror
 
 ## Installation
 
