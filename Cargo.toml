@@ -7,6 +7,7 @@ authors = ["supercoolspy"]
 repository = "https://github.com/supercoolspy/whois-that"
 readme = "README.md"
 description = "A feature full whois client library with support for non-UTF8 responses"
+exclude = [".github"]
 
 [features]
 default = ["serde", "decode-global", "idna"]
