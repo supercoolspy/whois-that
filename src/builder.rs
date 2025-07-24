@@ -1,5 +1,7 @@
-use crate::whois::Whois;
+use crate::whois::{Whois, WhoisServerEntry};
 use dashmap::DashMap;
+#[cfg(feature = "serde")]
+use serde::Deserialize;
 use std::collections::HashMap;
 #[cfg(feature = "serde")]
 use std::fs::File;
@@ -8,6 +10,22 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 #[cfg(feature = "serde")]
 use thiserror::Error;
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+#[cfg(feature = "serde")]
+enum EntryFromJson {
+    Simple(String),
+    Detailed {
+        host: String,
+        #[serde(default)]
+        query: String,
+        #[serde(default)]
+        punycode: Option<bool>,
+    },
+    #[allow(dead_code)]
+    None(Option<()>),
+}
 
 #[derive(Debug, Error)]
 #[cfg(feature = "serde")]
@@ -26,7 +44,7 @@ pub enum ServerListType {
     Path(PathBuf),
     #[cfg(feature = "serde")]
     Data(String),
-    Parsed(DashMap<String, Option<Arc<str>>>),
+    Parsed(DashMap<String, Option<WhoisServerEntry>>),
 }
 
 #[derive(Debug, Clone)]
@@ -78,23 +96,52 @@ impl WhoisBuilder {
         self
     }
 
+    fn turn_to_dashmap(
+        map: HashMap<String, Option<EntryFromJson>>,
+    ) -> DashMap<String, Option<WhoisServerEntry>> {
+        map.into_iter()
+            .map(|(k, v)| {
+                if matches!(v, Some(EntryFromJson::None(_))) {
+                    return (k, None);
+                }
+
+                (
+                    k,
+                    v.map(|entry| match entry {
+                        EntryFromJson::Simple(data) => WhoisServerEntry::Simple(Arc::from(data)),
+                        EntryFromJson::Detailed {
+                            host,
+                            query,
+                            punycode,
+                        } => WhoisServerEntry::Detailed {
+                            host: Arc::from(host),
+                            query: Arc::from(query),
+                            punycode: punycode.unwrap_or(true),
+                        },
+                        EntryFromJson::None(_) => {
+                            panic!("This should be impossible to ever happen")
+                        }
+                    }),
+                )
+            })
+            .collect()
+    }
+
     /// Builds the whois client, errors if unable to parse data or get file
     pub fn build(self) -> Result<Whois, WhoisBuilderError> {
         let server_list = match self.server_list {
             ServerListType::Path(path) => {
                 let file = File::open(path)?;
 
-                serde_json::from_reader::<_, HashMap<String, Option<String>>>(file)?
-                    .into_iter()
-                    .map(|(k, v)| (k, v.map(Arc::from)))
-                    .collect()
+                Self::turn_to_dashmap(serde_json::from_reader::<
+                    _,
+                    HashMap<String, Option<EntryFromJson>>,
+                >(file)?)
             }
-            ServerListType::Data(data) => {
-                serde_json::from_str::<HashMap<String, Option<String>>>(&data)?
-                    .into_iter()
-                    .map(|(k, v)| (k, v.map(Arc::from)))
-                    .collect()
-            }
+            ServerListType::Data(data) => Self::turn_to_dashmap(serde_json::from_str::<
+                HashMap<String, Option<EntryFromJson>>,
+            >(&data)?),
+
             ServerListType::Parsed(server_list) => server_list,
         };
 

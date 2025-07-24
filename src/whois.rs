@@ -12,13 +12,23 @@ pub struct Whois {
     /// The list of whois servers to lookup.
     /// Uses `Arc<str>` since it is more efficient when looking up
     /// since you may have to clone.
-    pub(crate) whois_servers: DashMap<String, Option<Arc<str>>>,
+    pub(crate) whois_servers: DashMap<String, Option<WhoisServerEntry>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum WhoisServerEntry {
+    Simple(Arc<str>),
+    Detailed {
+        host: Arc<str>,
+        query: Arc<str>,
+        punycode: bool,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DomainLookupInfo {
     /// The whois server for a domain
-    server: Arc<str>,
+    server_info: WhoisServerEntry,
     /// The domain, without any subdomains
     domain: String,
 }
@@ -31,18 +41,18 @@ impl Whois {
 
     /// Lookup a whois suffix in the table and see if a whois server exists for it.
     /// Needs to be punycode before being put into this function.
-    pub fn lookup_server(&self, suffix: &str) -> Option<Arc<str>> {
+    pub fn lookup_server(&self, suffix: &str) -> Option<WhoisServerEntry> {
         self.whois_servers
             .get(suffix)
-            .map(|kv_info| kv_info.value().clone())
-            .unwrap_or_default()
+            .map(|kv_info| kv_info.value().to_owned())
+            .unwrap_or(None)
     }
 
     /// Lookup the whois server for a domain and see if a whois server exists for it.
     /// This method is less efficient than lookup_server since it has to split the domain by `.`
     /// until it can find a matching server.
     /// Needs to be punycode before being put into this function.
-    pub fn lookup_server_domain(&self, domain: &str) -> Option<Arc<str>> {
+    pub fn lookup_server_domain(&self, domain: &str) -> Option<WhoisServerEntry> {
         let domain_chunks: Vec<&str> = domain.split(".").collect();
 
         // Start from the entire domain and then remove each `.` chunk until valid domain is found, or nothing is found
@@ -76,9 +86,12 @@ impl Whois {
             if self.whois_servers.contains_key(&suffix) {
                 let server = self.lookup_server(&suffix)?;
 
-                let domain = domain_chunks[domain_chunks.len() - i + 1..].join(".");
+                let domain = domain_chunks[domain_chunks.len() - i - 1..].join(".");
 
-                return Some(DomainLookupInfo { server, domain });
+                return Some(DomainLookupInfo {
+                    server_info: server,
+                    domain,
+                });
             }
         }
 
@@ -103,12 +116,31 @@ impl Whois {
     }
 
     pub async fn lookup(&self, domain_lookup_info: DomainLookupInfo) -> Result<String, WhoisError> {
-        let mut stream = TcpStream::connect(format!("{}:43", domain_lookup_info.server)).await?;
+        let mut stream = match domain_lookup_info.server_info {
+            WhoisServerEntry::Simple(ref host) => TcpStream::connect(format!("{}:43", host)),
+            WhoisServerEntry::Detailed { ref host, .. } => {
+                TcpStream::connect(format!("{}:43", host))
+            }
+        }
+        .await?;
 
-        stream
-            .write_all(domain_lookup_info.domain.as_bytes())
-            .await?;
-        stream.write_all("\r\n".as_bytes()).await?;
+        match domain_lookup_info.server_info {
+            WhoisServerEntry::Simple(_) => {
+                stream
+                    .write_all(domain_lookup_info.domain.as_bytes())
+                    .await?;
+                stream.write_all("\r\n".as_bytes()).await?;
+            }
+            WhoisServerEntry::Detailed { query, .. } => {
+                stream
+                    .write_all(
+                        query
+                            .replace("$addr", &domain_lookup_info.domain)
+                            .as_bytes(),
+                    )
+                    .await?;
+            }
+        }
 
         let mut data = Vec::new();
 
@@ -124,9 +156,22 @@ impl Whois {
     /// Get the whois data for a domain
     #[cfg(feature = "idna")]
     pub async fn whois_lookup(&self, domain: &str) -> Result<String, WhoisError> {
-        let info = self
+        let mut info = self
             .lookup_domain_info(&idna::domain_to_ascii(domain)?)
             .ok_or(WhoisError::WhoisServer(domain.to_string()))?;
+
+        let info = if let WhoisServerEntry::Detailed { punycode, .. } = info.server_info {
+            if !punycode {
+                let (new_domain, res) = idna::domain_to_unicode(domain);
+                res?;
+
+                info.domain = new_domain;
+            }
+
+            info
+        } else {
+            info
+        };
 
         self.lookup(info).await
     }

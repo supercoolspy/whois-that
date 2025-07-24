@@ -21,9 +21,15 @@
   "uy.com": "whois.centralnic.net",
   "web.com": "whois.centralnic.net",
   "za.com": "whois.centralnic.net",
-  "com": "whois.verisign-grs.com",
+  "com": {
+    "host": "whois.verisign-grs.com",
+    "query": "DOMAIN $addr\r\n"
+  },
   "za.net": "whois.za.net",
-  "net": "whois.verisign-grs.com",
+  "net": {
+    "host": "whois.verisign-grs.com",
+    "query": "DOMAIN $addr\r\n"
+  },
   "eu.org": "whois.eu.org",
   "za.org": "whois.za.org",
   "org": "whois.pir.org",
@@ -494,9 +500,16 @@
   "cx": "whois.nic.cx",
   "cy": null,
   "cz": "whois.nic.cz",
-  "de": "whois.denic.de",
+  "de": {
+    "host": "whois.denic.de",
+    "query": "-T dn $addr\r\n",
+    "punycode": false
+  },
   "dj": null,
-  "dk": "whois.dk-hostmaster.dk",
+  "dk": {
+    "host": "whois.dk-hostmaster.dk",
+    "query": "--charset=utf-8 --show-handles $addr\r\n"
+  },
   "dm": "whois.nic.dm",
   "do": "whois.nic.do",
   "dz": "whois.nic.dz",
@@ -552,7 +565,10 @@
   "je": "whois.je",
   "jm": null,
   "jo": null,
-  "jp": "whois.jprs.jp",
+  "jp": {
+    "host": "whois.jprs.jp",
+    "query": "$addr/e\r\n"
+  },
   "ke": "whois.kenic.or.ke",
   "kg": "whois.domain.kg",
   "kh": null,
@@ -605,7 +621,10 @@
   "ng": "whois.nic.net.ng",
   "ni": null,
   "nl": "whois.domain-registry.nl",
-  "no": "whois.norid.no",
+  "no": {
+    "host": "whois.norid.no",
+    "query": "-c utf-8 $addr\r\n"
+  },
   "np": null,
   "nr": null,
   "nu": "whois.iis.nu",
