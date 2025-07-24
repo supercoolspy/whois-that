@@ -25,3 +25,4 @@ tokio = { version = "1", features = ["net", "io-util"] }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
+idna = { version = "1.0.3" }
