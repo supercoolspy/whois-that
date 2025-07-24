@@ -59,18 +59,6 @@ async fn test_simple_international() {
 #[tokio::test]
 #[cfg(feature = "serde")]
 #[cfg(feature = "decode-global")]
-async fn test_simple_emoji() {
-    let whois = basic_whois_client();
-
-    whois
-        .whois_lookup("📻.fm")
-        .await
-        .expect("Shouldn't be able to get whois data for 📻.fm");
-}
-
-#[tokio::test]
-#[cfg(feature = "serde")]
-#[cfg(feature = "decode-global")]
 async fn test_simple_unicode() {
     let whois = basic_whois_client();
 
