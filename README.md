@@ -21,7 +21,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-whois-that = "0.1.0"
+whois-that = "0.1"
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -39,7 +39,7 @@ To use only specific features:
 
 ```toml
 [dependencies]
-whois-that = { version = "0.1.0", default-features = false, features = ["serde", "idna"] }
+whois-that = { version = "0.1", default-features = false, features = ["serde", "idna"] }
 ```
 
 ## Usage
@@ -134,3 +134,4 @@ Contributions are welcome!
 
 - [Tokio](https://tokio.rs/) for the asynchronous runtime
 - [DashMap](https://github.com/xacrimon/dashmap) for concurrent maps
+- [node-whois](https://github.com/FurqanSoftware/node-whois) for the original server list
