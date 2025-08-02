@@ -78,6 +78,7 @@ impl Whois {
     /// This method is less efficient than lookup_server since it has to split the domain by `.`
     /// until it can find a matching server. Returns the whois server and the domain (without subdomains).
     /// Needs to be punycode before being put into this function.
+    /// If a suffix like `com.uk` is put into this function it will return the suffix as both fields.
     pub fn lookup_domain_info(&self, domain: &str) -> Option<DomainLookupInfo> {
         let domain_chunks: Vec<&str> = domain.split(".").collect();
 
@@ -90,7 +91,16 @@ impl Whois {
             if self.whois_servers.contains_key(&suffix) {
                 let server = self.lookup_server(&suffix)?;
 
-                let domain = domain_chunks[domain_chunks.len() - i - 1..].join(".");
+                let suffix_start =  domain_chunks.len() - i;
+                
+                let index = if suffix_start == 0 {
+                    // Occurs for domains like uk.com where they are a website and a suffix
+                    0
+                } else {
+                    suffix_start - 1
+                };
+
+                let domain = domain_chunks[index..].join(".");
 
                 return Some(DomainLookupInfo {
                     server_info: server,
