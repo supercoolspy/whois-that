@@ -1,6 +1,8 @@
 use thiserror::Error;
 
 pub mod builder;
+#[cfg(feature = "parser")]
+pub mod parser;
 pub mod whois;
 
 #[cfg(test)]

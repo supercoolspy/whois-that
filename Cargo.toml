@@ -10,7 +10,9 @@ description = "A feature full whois client library with support for non-UTF8 res
 exclude = [".github"]
 
 [features]
-default = ["serde", "decode-global", "idna"]
+default = ["serde", "decode-global", "idna", "parser"]
+parser = []
+date-parse = ["parser", "dep:time"]
 idna = ["dep:idna"]
 serde = ["dep:serde", "dep:serde_json", "dashmap/serde"]
 decode-global = ["dep:encoding_rs"]
@@ -22,6 +24,7 @@ idna = { version = "1.0.3", optional = true }
 serde = { version = "1", optional = true }
 serde_json = { version = "1", optional = true }
 thiserror = "2.0.12"
+time = { version = "0.3.41", optional = true }
 tokio = { version = "1", features = ["net", "io-util"] }
 
 [dev-dependencies]

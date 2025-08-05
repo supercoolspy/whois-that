@@ -32,9 +32,9 @@ pub enum WhoisServerEntry {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DomainLookupInfo {
     /// The whois server for a domain
-    server_info: WhoisServerEntry,
+    pub server_info: WhoisServerEntry,
     /// The domain, without any subdomains
-    domain: String,
+    pub domain: String,
 }
 
 impl Whois {
@@ -52,11 +52,11 @@ impl Whois {
             .unwrap_or(None)
     }
 
-    /// Lookup the whois server for a domain and see if a whois server exists for it.
+    /// Lookup the suffix for a domain.
     /// This method is less efficient than lookup_server since it has to split the domain by `.`
     /// until it can find a matching server.
     /// Needs to be punycode before being put into this function.
-    pub fn lookup_server_domain(&self, domain: &str) -> Option<WhoisServerEntry> {
+    pub fn lookup_suffix(&self, domain: &str) -> Option<String> {
         let domain_chunks: Vec<&str> = domain.split(".").collect();
 
         // Start from the entire domain and then remove each `.` chunk until valid domain is found, or nothing is found
@@ -66,12 +66,22 @@ impl Whois {
 
             // Checks if a match is found
             if self.whois_servers.contains_key(&suffix) {
-                return self.lookup_server(&suffix);
+                return Some(suffix);
             }
         }
 
         // Return none if no suffix is found
         None
+    }
+
+    /// Lookup the whois server for a domain via the suffix and see if a whois server exists for it.
+    /// This method is less efficient than lookup_server since it has to split the domain by `.`
+    /// until it can find a matching server.
+    /// Needs to be punycode before being put into this function.
+    pub fn lookup_server_domain(&self, domain: &str) -> Option<WhoisServerEntry> {
+        let suffix = self.lookup_suffix(domain)?;
+
+        self.lookup_server(&suffix)
     }
 
     /// Lookup the whois server for a domain and see if a whois server exists for it.
@@ -91,8 +101,8 @@ impl Whois {
             if self.whois_servers.contains_key(&suffix) {
                 let server = self.lookup_server(&suffix)?;
 
-                let suffix_start =  domain_chunks.len() - i;
-                
+                let suffix_start = domain_chunks.len() - i;
+
                 let index = if suffix_start == 0 {
                     // Occurs for domains like uk.com where they are a website and a suffix
                     0
